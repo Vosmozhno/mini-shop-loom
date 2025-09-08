@@ -30,7 +30,6 @@ pnpm-lock.yaml
 *.sublime-workspace
 *.sublime-project
 
-
 # Build & cache
 build/
 .cache/
@@ -38,7 +37,6 @@ dist/
 
 # Local Medusa files
 .medusa/
-
 
 # Build & temp
 .build/
