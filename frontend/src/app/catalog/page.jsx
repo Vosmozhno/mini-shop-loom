@@ -1,14 +1,14 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { sdk } from "@/lib/medusa"
+import { medusa } from "@/lib/medusa"
 
 export default function CatalogPage() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    sdk.products.list({
+    medusa.products.list({
       fields: "*variants.calculated_price",
     })
       .then(({ products }) => {
