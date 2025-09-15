@@ -43,7 +43,7 @@ export default function CatalogPage() {
             <a
               key={p.id}
               href={`/product/${p.handle}`}
-              className="border rounded-xl p-4 shadow hover:shadow-lg transition flex flex-col items-center"
+              className="bg-neutral-900 rounded-xl p-4 shadow hover:shadow-lg transition flex flex-col items-center"
             >
               <img
                 src={p.thumbnail}

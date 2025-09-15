@@ -43,7 +43,7 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateItem = async (lineId, quantity) => {
+  const updateQuantity = async (lineId, quantity) => {
     try {
       const { cart: updated } = await medusa.carts.lineItems.update(
         cart.id,
@@ -52,29 +52,29 @@ export const CartProvider = ({ children }) => {
       );
       setCart(updated);
     } catch (e) {
-      console.error("Ошибка обновления позиции:", e);
+      console.error("Ошибка обновления количества:", e);
     }
   };
 
   const removeItem = async (lineId) => {
-    try {
-      const { cart: updated } = await medusa.carts.lineItems.delete(
-        cart.id,
-        lineId
-      );
-      setCart(updated);
-    } catch (e) {
-      console.error("Ошибка удаления позиции:", e);
-    }
-  };
+  try {
+    await medusa.carts.lineItems.delete(cart.id, lineId);
+    const { cart: refreshed } = await medusa.carts.retrieve(cart.id); // <-- перезагружаем корзину
+    setCart(refreshed);
+  } catch (e) {
+    console.error("Ошибка удаления позиции:", e);
+  }
+};
+
 
   return (
     <CartContext.Provider
       value={{
         cart,
+        items: cart?.items || [],
         loading,
         addItem,
-        updateItem,
+        updateQuantity,
         removeItem,
       }}
     >

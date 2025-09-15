@@ -20,7 +20,11 @@
 }
 
 body {
-  background: #101010;
+  background: #121212;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button {
+  cursor: pointer;
 }
