@@ -31,6 +31,7 @@ export default function ProductPage({ params }) {
         const { products } = await medusa.products.list({
           handle,
           fields: "*variants.calculated_price",
+          region_id: "reg_01K5EN1H5M4MAYFNP22D517X82",
         });
         setProduct(products[0] || null);
       } catch (e) {

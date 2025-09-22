@@ -59,7 +59,7 @@ export const CartProvider = ({ children }) => {
   const removeItem = async (lineId) => {
   try {
     await medusa.carts.lineItems.delete(cart.id, lineId);
-    const { cart: refreshed } = await medusa.carts.retrieve(cart.id); // <-- перезагружаем корзину
+    const { cart: refreshed } = await medusa.carts.retrieve(cart.id); 
     setCart(refreshed);
   } catch (e) {
     console.error("Ошибка удаления позиции:", e);
