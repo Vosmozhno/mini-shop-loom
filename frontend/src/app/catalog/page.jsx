@@ -10,7 +10,7 @@ export default function CatalogPage() {
   useEffect(() => {
     medusa.products.list({
       fields: "*variants.calculated_price",
-      region_id: "reg_01K5EN1H5M4MAYFNP22D517X82",
+      region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
     })
       .then(({ products }) => {
         setProducts(products)

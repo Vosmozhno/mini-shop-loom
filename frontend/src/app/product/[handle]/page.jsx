@@ -15,15 +15,21 @@ export default function ProductPage({ params }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddToCart = async () => {
-    setIsLoading(true);
-    try {
-      await addItem(variant.id, quantity);
-    } catch (e) {
-      console.error("Ошибка добавления в корзину:", e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!variant) {
+    console.error("Вариант не найден");
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    await addItem(variant.id, quantity);
+  } catch (e) {
+    console.error("Ошибка добавления в корзину:", e);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 
   useEffect(() => {
     async function fetchProduct() {
@@ -31,7 +37,7 @@ export default function ProductPage({ params }) {
         const { products } = await medusa.products.list({
           handle,
           fields: "*variants.calculated_price",
-          region_id: "reg_01K5EN1H5M4MAYFNP22D517X82",
+          region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
         });
         setProduct(products[0] || null);
       } catch (e) {

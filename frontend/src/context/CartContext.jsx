@@ -12,44 +12,69 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     async function initCart() {
       try {
+        let cart;
         const cartId = localStorage.getItem("cart_id");
+
         if (cartId) {
-          const { cart } = await medusa.carts.retrieve(cartId);
-          setCart(cart);
-        } else {
-          const { cart } = await medusa.carts.create();
-          localStorage.setItem("cart_id", cart.id);
-          setCart(cart);
+  
+          try {
+            const response = await medusa.carts.retrieve(cartId);
+            cart = response.cart;
+            console.log("Загружена существующая корзина:", cart);
+          } catch (err) {
+            console.warn("Старая корзина не найдена, создаём новую");
+          }
         }
+
+        if (!cart) {
+          const response = await medusa.carts.create({
+            region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
+          });
+          cart = response.cart;
+          localStorage.setItem("cart_id", cart.id);
+          console.log("Создана новая корзина:", cart);
+        }
+
+        setCart(cart);
       } catch (e) {
-        console.error("Ошибка загрузки корзины:", e);
+        console.error("Ошибка инициализации корзины:", e);
       } finally {
         setLoading(false);
       }
     }
+
     initCart();
   }, []);
 
+
+
   const addItem = async (variantId, quantity = 1) => {
-    if (!cart) return;
+    if (!cart) {
+      console.error("Корзина ещё не инициализирована");
+      return;
+    }
+
+    if (!variantId) {
+      console.error("variantId не передан");
+      return;
+    }
+
     try {
-      const { cart: updated } = await medusa.carts.lineItems.create(cart.id, {
+      console.log("Добавляем в корзину:", { cartId: cart.id, variantId, quantity });
+      const response = await medusa.carts.lineItems.create(cart.id, {
         variant_id: variantId,
         quantity,
       });
-      setCart(updated);
+      console.log("Добавлено в корзину:", response.cart);
+      setCart(response.cart);
     } catch (e) {
-      console.error("Ошибка добавления товара в корзину:", e);
+      console.error("Ошибка добавления товара в корзину:", e.response || e);
     }
   };
 
   const updateQuantity = async (lineId, quantity) => {
     try {
-      const { cart: updated } = await medusa.carts.lineItems.update(
-        cart.id,
-        lineId,
-        { quantity }
-      );
+      const { cart: updated } = await medusa.carts.lineItems.update(cart.id, lineId, { quantity });
       setCart(updated);
     } catch (e) {
       console.error("Ошибка обновления количества:", e);
@@ -57,15 +82,14 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeItem = async (lineId) => {
-  try {
-    await medusa.carts.lineItems.delete(cart.id, lineId);
-    const { cart: refreshed } = await medusa.carts.retrieve(cart.id); 
-    setCart(refreshed);
-  } catch (e) {
-    console.error("Ошибка удаления позиции:", e);
-  }
-};
-
+    try {
+      await medusa.carts.lineItems.delete(cart.id, lineId);
+      const { cart: refreshed } = await medusa.carts.retrieve(cart.id);
+      setCart(refreshed);
+    } catch (e) {
+      console.error("Ошибка удаления позиции:", e);
+    }
+  };
 
   return (
     <CartContext.Provider
