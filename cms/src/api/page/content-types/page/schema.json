@@ -14,18 +14,12 @@
     "title": {
       "type": "string"
     },
-    "slug": {
-      "type": "uid"
-    },
     "content": {
       "type": "blocks"
     },
-    "image": {
-      "type": "media",
-      "multiple": true,
-      "allowedTypes": [
-        "images"
-      ]
+    "slug": {
+      "type": "uid",
+      "targetField": "title"
     }
   }
 }

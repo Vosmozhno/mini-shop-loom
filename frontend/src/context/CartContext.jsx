@@ -82,14 +82,49 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeItem = async (lineId) => {
+  try {
+    const { cart: updatedCart } = await medusa.carts.lineItems.delete(cart.id, lineId);
+
+    setCart(updatedCart);
+
+  } catch (e) {
+    console.error("Ошибка удаления позиции:", e);
+  }
+};
+
+ const clearCart = async () => {
     try {
-      await medusa.carts.lineItems.delete(cart.id, lineId);
-      const { cart: refreshed } = await medusa.carts.retrieve(cart.id);
-      setCart(refreshed);
+      localStorage.removeItem("cart_id");
+
+      const { cart: newCart } = await medusa.carts.create({
+        region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
+      });
+
+      setCart(newCart);
+
+      localStorage.setItem("cart_id", newCart.id);
+
+      console.log("Корзина очищена и создана новая:", newCart);
     } catch (e) {
-      console.error("Ошибка удаления позиции:", e);
+      console.error("Ошибка при очистке корзины:", e);
     }
   };
+
+  return (
+    <CartContext.Provider
+      value={{
+        cart,
+        items: cart?.items || [],
+        loading,
+        addItem,
+        updateQuantity,
+        removeItem,
+        clearCart, // <-- 5. Добавляем новую функцию в контекст
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 
   return (
     <CartContext.Provider
