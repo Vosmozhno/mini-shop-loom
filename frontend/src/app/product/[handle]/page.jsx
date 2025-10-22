@@ -4,32 +4,31 @@ import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { medusa } from "@/lib/medusa";
 import { useCart } from "@/context/CartContext";
-import { Minus, Plus, Loader } from "lucide-react";
+import { Minus, Plus, Loader, ArrowLeft } from "lucide-react";
 
 export default function ProductPage({ params }) {
   const { handle } = use(params);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const { addItem } = useCart();
   const [isLoading, setIsLoading] = useState(false);
 
+  const { cart, addItem, loading: cartLoading } = useCart();
+
   const handleAddToCart = async () => {
-  if (!variant) {
-    console.error("Вариант не найден");
-    return;
-  }
-
-  setIsLoading(true);
-  try {
-    await addItem(variant.id, quantity);
-  } catch (e) {
-    console.error("Ошибка добавления в корзину:", e);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
+    if (!variant) {
+      console.error("Вариант товара не найден, добавление невозможно.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await addItem(variant.id, quantity);
+    } catch (e) {
+      console.error("Ошибка добавления в корзину:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchProduct() {
@@ -49,71 +48,86 @@ export default function ProductPage({ params }) {
     fetchProduct();
   }, [handle]);
 
-  if (loading) return <p className="p-6 text-gray-400">Загрузка...</p>;
-  if (!product) return <p className="p-6 text-gray-400">Товар не найден</p>;
+  if (loading) {
+    return <main className="text-center p-12">Загрузка...</main>;
+  }
+  if (!product) {
+    return <main className="text-center p-12">Товар не найден.</main>;
+  }
 
   const variant = product.variants?.[0];
-  const price = variant?.calculated_price?.calculated_amount;
-  const currency = variant?.calculated_price?.currency_code;
+  const price = variant?.calculated_price?.calculated_amount !== undefined
+    ? new Intl.NumberFormat("ru-RU", {
+        style: "currency",
+        currency: variant.calculated_price.currency_code || "RUB",
+      }).format(variant.calculated_price.calculated_amount)
+    : null;
 
   return (
-    <main className="p-6 max-w-7xl mx-auto min-h-screen text-neutral-100">
-      <Link
-        href="/catalog"
-        className="inline-flex items-center text-gray-400 hover:text-gray-200 mb-6 transition"
-      >
-        ← Назад в каталог
-      </Link>
+    <main className="max-w-7xl mx-auto px-6 py-12">
+      <div className="mb-8">
+        <Link
+          href="/catalog"
+          className="inline-flex items-center gap-2 text-sm uppercase tracking-widest text-neutral-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft size={16} />
+          Назад в каталог
+        </Link>
+      </div>
 
-      <h1 className="text-3xl font-bold text-center mb-6">{product.title}</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 shadow-xl p-6">
-        <div className="flex justify-center items-center">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
+        <div className="aspect-square w-full relative bg-neutral-900 rounded-md">
           <img
             src={product.thumbnail}
             alt={product.title}
-            className="rounded-xl shadow-lg w-150 h-150 max-w-md object-contain"
+            className="w-full h-full object-contain"
           />
         </div>
 
         <div className="flex flex-col justify-center">
-          <p className="text-gray-300 mb-6 leading-relaxed">{product.description}</p>
+          <h1 className="text-4xl sm:text-5xl font-bold uppercase tracking-wider text-white mb-6">
+            {product.title}
+          </h1>
 
-          {price !== undefined && (
-            <p className="text-2xl font-semibold mb-4">
-              <span className="bg-neutral-700 text-white px-3 py-1 rounded-xl">
-                {price} {currency?.toUpperCase()}
-              </span>
+          {price && (
+            <p className="text-3xl font-medium tracking-wide text-neutral-200 mb-8">
+              {price}
             </p>
           )}
 
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="p-2 bg-neutral-700 rounded-full hover:bg-neutral-600"
-            >
-              <Minus size={16} />
-            </button>
-            <span className="text-lg">{quantity}</span>
-            <button
-              onClick={() => setQuantity((q) => q + 1)}
-              className="p-2 bg-neutral-700 rounded-full hover:bg-neutral-600"
-            >
-              <Plus size={16} />
-            </button>
+          <div className="prose prose-invert prose-lg text-neutral-200 mb-10">
+            <p>{product.description}</p>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            className="px-8 py-3 bg-white text-black text-lg font-semibold rounded-2xl hover:bg-gray-300 shadow-md flex items-center justify-center gap-2"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader className="animate-spin h-7 w-7 text-black" />
-            ) : (
-              "Добавить в корзину →"
-            )}
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center border border-white/30 rounded-md">
+              <button
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="p-3 text-neutral-400 hover:text-white transition-colors"
+              >
+                <Minus size={16} />
+              </button>
+              <span className="text-base font-medium w-12 text-center">{quantity}</span>
+              <button
+                onClick={() => setQuantity((q) => q + 1)}
+                className="p-3 text-neutral-400 hover:text-white transition-colors"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+
+            <button
+              onClick={handleAddToCart}
+              className="flex-grow px-8 py-3 bg-white text-black text-sm uppercase tracking-widest font-semibold rounded-md hover:bg-neutral-300 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              disabled={cartLoading || isLoading || !cart}
+            >
+              {isLoading ? (
+                <Loader className="animate-spin h-5 w-5" />
+              ) : (
+                "Добавить в корзину"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </main>

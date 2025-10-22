@@ -44,13 +44,13 @@ export default function HomePage() {
           ...(imageUrl && { backgroundImage: `url(${imageUrl})` }) 
         }}
       >
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+        <div className="absolute inset-0 bg-black opacity-60"></div>
         
         <div className="relative z-10">
           <h1 className="text-4xl md:text-5xl font-semibold uppercase tracking-wider mb-4">
             {page.title}
           </h1>
-          <div className="prose prose-invert prose-lg max-w-2xl mx-auto mb-8">
+          <div className="prose prose-invert prose-lg w-5xl text-lg mx-auto mb-8">
             {page.content && <BlocksRenderer content={page.content} />}
           </div>
           <Link 

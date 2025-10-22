@@ -13,39 +13,30 @@ export default function CatalogPage() {
   const [selectedCategories, setSelectedCategories] = useState([])
 
   const [isCategoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
-  
   const dropdownRef = useRef(null)
 
+  // --- Логика получения данных остается без изменений ---
   useEffect(() => {
     medusa.productCategories.list({ limit: 100 })
-      .then(({ product_categories }) => {
-        setCategories(product_categories)
-      })
-      .catch((err) => {
-        console.error("Ошибка при получении категорий:", err)
-      })
+      .then(({ product_categories }) => setCategories(product_categories))
+      .catch((err) => console.error("Ошибка при получении категорий:", err))
   }, [])
 
   useEffect(() => {
     setLoading(true);
-    const fetchProducts = async () => {
-      try {
-        const params = {
-          fields: "*variants.calculated_price",
-          region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
-        };
-        if (searchQuery) params.q = searchQuery;
-        if (selectedCategories.length > 0) params.category_id = selectedCategories;
-        
-        const { products } = await medusa.products.list(params);
-        setProducts(products);
-      } catch (err) {
-        console.error("Ошибка при получении продуктов:", err);
-      } finally {
-        setLoading(false);
-      }
+    const params = {
+      fields: "*variants.calculated_price",
+      region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
     };
-    const timer = setTimeout(() => fetchProducts(), 300);
+    if (searchQuery) params.q = searchQuery;
+    if (selectedCategories.length > 0) params.category_id = selectedCategories;
+
+    const timer = setTimeout(() => {
+      medusa.products.list(params)
+        .then(({ products }) => setProducts(products))
+        .catch((err) => console.error("Ошибка при получении продуктов:", err))
+        .finally(() => setLoading(false));
+    }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery, selectedCategories]);
 
@@ -56,9 +47,7 @@ export default function CatalogPage() {
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownRef]);
 
   const handleCategoryChange = (categoryId) => {
@@ -70,91 +59,92 @@ export default function CatalogPage() {
   };
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-center">Каталог</h1>
+    <main className="px-6 py-12 sm:py-16">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl sm:text-5xl font-bold uppercase tracking-wider text-center mb-12">
+          Каталог
+        </h1>
 
-      <div className="flex flex-col md:flex-row gap-6 mb-8 items-center">
-        <div className="flex-grow w-full">
-          <input
-            type="search"
-            placeholder="Поиск по названию..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 rounded-xl bg-neutral-800 text-white border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          />
+        <div className="max-w-4xl mx-auto flex flex-col md:flex-row gap-6 mb-16 items-center">
+          <div className="flex-grow w-full">
+            <input
+              type="search"
+              placeholder="Поиск..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-5 py-3 bg-transparent border border-white/30 rounded-md text-white placeholder:text-neutral-500 uppercase tracking-widest text-sm focus:outline-none focus:ring-1 focus:ring-white/50"
+            />
+          </div>
+
+          <div className="relative w-full md:w-auto" ref={dropdownRef}>
+            <button
+              onClick={() => setCategoryDropdownOpen(!isCategoryDropdownOpen)}
+              className="w-full md:w-64 px-5 py-3 bg-transparent border border-white/30 rounded-md text-white uppercase tracking-widest text-sm flex items-center justify-between"
+            >
+              <span>
+                {selectedCategories.length > 0
+                  ? `Категории (${selectedCategories.length})`
+                  : "Все категории"}
+              </span>
+              <svg className={`w-4 h-4 transition-transform ${isCategoryDropdownOpen ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+
+            {isCategoryDropdownOpen && (
+              <div className="absolute top-full mt-2 w-full bg-neutral-900 border border-white/30 rounded-md z-10 p-2 max-h-60 overflow-y-auto">
+                {categories.map((cat) => (
+                  <label key={cat.id} className="flex items-center gap-3 p-2 hover:bg-neutral-800 rounded cursor-pointer uppercase text-sm tracking-widest">
+                    <input
+                      type="checkbox"
+                      checked={selectedCategories.includes(cat.id)}
+                      onChange={() => handleCategoryChange(cat.id)}
+                      className="h-4 w-4 rounded bg-neutral-700 border-neutral-600 text-white focus:ring-white/50"
+                    />
+                    <span>{cat.name}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="relative w-full md:w-auto" ref={dropdownRef}>
-          <button
-            onClick={() => setCategoryDropdownOpen(!isCategoryDropdownOpen)}
-            className="w-full md:w-56 px-4 py-2 rounded-xl bg-neutral-800 text-white border border-neutral-700 flex items-center justify-between"
-          >
-            <span>
-              {selectedCategories.length > 0
-                ? `Категории (${selectedCategories.length})`
-                : "Выберите категории"}
-            </span>
-            <svg className={`w-4 h-4 transition-transform ${isCategoryDropdownOpen ? 'transform rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-          </button>
-
-          {isCategoryDropdownOpen && (
-            <div className="absolute top-full mt-2 w-full md:w-56 bg-neutral-800 border border-neutral-700 rounded-xl z-10 p-2 max-h-60 overflow-y-auto">
-              {categories.map((cat) => (
-                <label 
-                  key={cat.id} 
-                  className="flex items-center gap-3 p-2 hover:bg-neutral-700 rounded cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(cat.id)}
-                    onChange={() => handleCategoryChange(cat.id)}
-                    className="h-4 w-4 rounded bg-neutral-900 border-neutral-600 text-indigo-500 focus:ring-indigo-600"
-                  />
-                  <span>{cat.name}</span>
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
+        {loading ? (
+          <p className="text-center">Загрузка товаров...</p>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
+            {products.map((p) => {
+              const variant = p.variants?.[0];
+              const price =
+                variant?.calculated_price?.calculated_amount !== undefined
+                  ? new Intl.NumberFormat("ru-RU", {
+                      style: "currency",
+                      currency: variant.calculated_price.currency_code || "RUB",
+                    }).format(variant.calculated_price.calculated_amount)
+                  : "Цена недоступна";
+              return (
+                <Link key={p.id} href={`/product/${p.handle}`} className="group">
+                  <div className="aspect-square w-full overflow-hidden rounded-md bg-neutral-900">
+                    <img
+                      src={p.thumbnail}
+                      alt={p.title}
+                      className="w-full h-full object-cover object-center transition-opacity group-hover:opacity-80"
+                    />
+                  </div>
+                  <div className="mt-4 text-center">
+                    <h2 className="text-sm uppercase tracking-widest font-semibold text-white">
+                      {p.title}
+                    </h2>
+                    <p className="mt-1 text-base text-neutral-200">{price}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-center text-gray-400">
+            Товары не найдены. Попробуйте изменить критерии поиска.
+          </p>
+        )}
       </div>
-
-      {loading ? (
-        <p className="text-center">Загрузка продуктов...</p>
-      ) : products.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {products.map((p) => {
-            const variant = p.variants?.[0];
-            const price =
-              variant?.calculated_price?.calculated_amount !== undefined
-                ? new Intl.NumberFormat("ru-RU", {
-                    style: "currency",
-                    currency: variant.calculated_price.currency_code || "RUB",
-                  }).format(variant.calculated_price.calculated_amount)
-                : "Цена недоступна";
-            return (
-              <Link
-                key={p.id}
-                href={`/product/${p.handle}`}
-                className="bg-neutral-900 rounded-xl p-4 shadow hover:shadow-lg transition flex flex-col items-center group"
-              >
-                <div className="w-full h-90 overflow-hidden rounded-lg mb-4">
-                  <img
-                    src={p.thumbnail}
-                    alt={p.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
-                <h2 className="font-semibold text-center">{p.title}</h2>
-                <p className="text-center mt-1">{price}</p>
-              </Link>
-            );
-          })}
-        </div>
-      ) : (
-        <p className="text-center text-gray-400">
-          Товары не найдены. Попробуйте изменить критерии поиска.
-        </p>
-      )}
     </main>
   );
 }

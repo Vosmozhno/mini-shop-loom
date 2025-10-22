@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, User } from "lucide-react";
 
 export default function Header() {
   const { cart } = useCart();
@@ -10,28 +10,37 @@ export default function Header() {
   const cartCount = cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-neutral-900 shadow-md">
-      <Link href="/" className="text-2xl font-bold text-white hover:text-gray-300">
-        Loom
-      </Link>
+    <header className="fixed top-0 left-0 w-full z-50 text-white">
 
-      <nav className="flex items-center gap-6">
-        <Link href="/catalog" className="hover:text-gray-300">
-          Каталог
-        </Link>
-        <Link href="/about" className="hover:text-gray-300">
-          О нас
-        </Link>
+      <div className="grid grid-cols-3 items-center h-24 px-8 border-b border-white/20">
+        
+        <nav className="flex items-center justify-start gap-8">
+          <Link href="/catalog" className="text-sm uppercase tracking-widest transition-colors hover:text-gray-400">
+            Каталог
+          </Link>
+          <Link href="/about" className="text-sm uppercase tracking-widest transition-colors hover:text-gray-400">
+            О нас
+          </Link>
+        </nav>
 
-        <Link href="/cart" className="relative flex items-center hover:text-gray-300">
-          <ShoppingCart className="w-6 h-6" />
-          {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-600 text-xs rounded-full w-5 h-5 flex items-center justify-center text-white">
-              {cartCount}
-            </span>
-          )}
-        </Link>
-      </nav>
+        <div className="flex justify-center">
+          <Link href="/" className="text-3xl font-bold uppercase tracking-[0.2em] hover:text-gray-300">
+            Loom
+          </Link>
+        </div>
+
+        <nav className="flex items-center justify-end gap-8">
+
+          <Link href="/cart" className="relative flex items-center transition-colors hover:text-gray-400">
+            <ShoppingCart className="w-6 h-6" />
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-white text-black text-xs rounded-full w-4 h-4 flex items-center justify-center font-semibold">
+                {cartCount}
+              </span>
+            )}
+          </Link>
+        </nav>
+      </div>
     </header>
   );
 }
