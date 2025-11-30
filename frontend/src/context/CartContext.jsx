@@ -9,91 +9,97 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function initCart() {
-      try {
-        let cart;
-        const cartId = localStorage.getItem("cart_id");
-
-        if (cartId) {
-          try {
-            const response = await medusa.carts.retrieve(cartId);
-            cart = response.cart;
-          } catch (err) {
-            console.warn("Старая корзина не найдена, создаём новую");
-          }
-        }
-
-        if (!cart) {
-          // --- ИЗМЕНЕНИЕ №1 ЗДЕСЬ ---
-          // Добавляем ID канала продаж при создании новой корзины
-          const response = await medusa.carts.create({
-            region_id: "reg_01K85W4J26QYCAR5VP64BXCM63",
-            sales_channel_id: process.env.NEXT_PUBLIC_SALES_CHANNEL_ID,
-          });
-          cart = response.cart;
-          localStorage.setItem("cart_id", cart.id);
-        }
-        setCart(cart);
-      } catch (e) {
-        console.error("Ошибка инициализации корзины:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-    initCart();
-  }, []);
-
-  const addItem = async (variantId, quantity = 1) => {
-    if (!cart) {
-      console.error("Корзина ещё не инициализирована");
-      return;
-    }
+  const refreshCart = async (cartId) => {
     try {
-      const { cart: updatedCart } = await medusa.carts.lineItems.create(cart.id, {
-        variant_id: variantId,
-        quantity,
+      const { cart: refreshed } = await medusa.store.cart.retrieve(cartId, {
+        fields: "+items.thumbnail,+items.product.title",
       });
-      setCart(updatedCart);
+      setCart(refreshed);
     } catch (e) {
-      console.error("Ошибка добавления товара в корзину:", e.response || e);
+      console.error("Ошибка обновления корзины:", e);
+      if (e.status === 404) {
+        localStorage.removeItem("cart_id");
+        setCart(null);
+      }
     }
   };
 
-  const updateQuantity = async (lineId, quantity) => {
+  const createNewCart = async () => {
     try {
-      await medusa.carts.lineItems.update(cart.id, lineId, { quantity });
-      const { cart: refreshedCart } = await medusa.carts.retrieve(cart.id);
-      setCart(refreshedCart);
+      const { regions } = await medusa.store.region.list();
+
+      if (!regions || regions.length === 0) {
+        console.error("Нет регионов. Убедитесь, что вы запустили 'medusa seed'");
+        return;
+      }
+
+      const regionId = regions[0].id;
+
+      const { cart: newCart } = await medusa.store.cart.create({
+        region_id: regionId,
+        shipping_address: {
+          country_code: "ru",
+        },
+      });
+      
+      localStorage.setItem("cart_id", newCart.id);
+      setCart(newCart);
     } catch (e) {
-      console.error("Ошибка обновления количества:", e);
+      console.error("Ошибка создания корзины:", e);
+    }
+  };
+
+  useEffect(() => {
+    async function init() {
+      const cartId = localStorage.getItem("cart_id");
+      if (cartId) {
+        await refreshCart(cartId);
+      } else {
+        await createNewCart();
+      }
+      setLoading(false);
+    }
+    init();
+  }, []);
+
+  const addItem = async (variantId, quantity = 1) => {
+    if (!cart?.id) await createNewCart();
+    
+    const currentCartId = cart?.id || localStorage.getItem("cart_id");
+
+    try {
+      await medusa.store.cart.createLineItem(currentCartId, {
+        variant_id: variantId,
+        quantity,
+      });
+      await refreshCart(currentCartId);
+    } catch (e) {
+      console.error("Ошибка добавления:", e);
     }
   };
 
   const removeItem = async (lineId) => {
     try {
-      await medusa.carts.lineItems.delete(cart.id, lineId);
-      const { cart: refreshedCart } = await medusa.carts.retrieve(cart.id);
-      setCart(refreshedCart);
+      await medusa.store.cart.deleteLineItem(cart.id, lineId);
+      await refreshCart(cart.id);
     } catch (e) {
-      console.error("Ошибка удаления позиции:", e);
+      console.error("Ошибка удаления:", e);
+    }
+  };
+
+  const updateQuantity = async (lineId, quantity) => {
+    try {
+      await medusa.store.cart.updateLineItem(cart.id, lineId, { quantity });
+      await refreshCart(cart.id);
+    } catch (e) {
+      console.error("Ошибка обновления кол-ва:", e);
     }
   };
 
   const clearCart = async () => {
-    try {
-      localStorage.removeItem("cart_id");
-      // --- ИЗМЕНЕНИЕ №2 ЗДЕСЬ ---
-      // Добавляем ID канала продаж также при создании корзины после очистки
-      const { cart: newCart } = await medusa.carts.create({
-        region_id: "reg_01K85W4J26QYCAR5VP64BXCM63",
-        sales_channel_id: process.env.NEXT_PUBLIC_SALES_CHANNEL_ID,
-      });
-      setCart(newCart);
-      localStorage.setItem("cart_id", newCart.id);
-    } catch (e) {
-      console.error("Ошибка при очистке корзины:", e);
-    }
+    localStorage.removeItem("cart_id");
+    setCart(null);
+    await createNewCart();
   };
 
   return (

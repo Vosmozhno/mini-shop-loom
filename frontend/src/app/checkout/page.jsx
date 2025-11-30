@@ -1,159 +1,77 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React from "react";
+import Link from "next/link";
 import { useCart } from "@/context/CartContext";
-import { useRouter } from "next/navigation";
-import { medusa } from "@/lib/medusa";
+import { ChevronLeft } from "lucide-react";
+import { useCheckout } from "./useCheckout";
+import CheckoutForm from "./components/CheckoutForm";
+import ShippingSelect from "./components/ShippingSelect";
+import OrderSummary from "./components/OrderSummary";
 
 export default function CheckoutPage() {
-  const { cart, loading } = useCart();
-  const router = useRouter();
+  const { cart, items, clearCart } = useCart();
+  
+  const logic = useCheckout(cart, items, clearCart);
 
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState({
-    first_name: "",
-    last_name: "",
-    address_1: "",
-    city: "",
-    postal_code: "",
-    country_code: "ru",
-    phone: "",
-  });
-  const [shippingOptions, setShippingOptions] = useState([]);
-  const [selectedShipping, setSelectedShipping] = useState(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!cart?.id) return;
-
-    medusa.shippingOptions
-      .list({ cart_id: cart.id })
-      .then(({ shipping_options }) => setShippingOptions(shipping_options))
-      .catch((e) => console.error("Ошибка загрузки способов доставки:", e));
-  }, [cart]);
-
-  const handleCompleteCheckout = async () => {
-    if (!cart || !selectedShipping) return;
-    setBusy(true);
-
-    try {
-      const res = await fetch("/api/complete-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          cart_id: cart.id,
-          email,
-          address,
-          shipping_option_id: selectedShipping,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Не удалось завершить заказ");
-
-      localStorage.removeItem("cart_id");
-      router.push(`/thank-you?order_id=${data.order.id}`);
-    } catch (e) {
-      console.error("Ошибка завершения заказа:", e);
-      alert("Не удалось завершить заказ. Проверьте данные и повторите попытку.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (loading || !cart) return <p className="text-center py-20">Загрузка…</p>;
+  if (!items || items.length === 0) {
+    return (
+      <main className="max-w-4xl mx-auto px-6 py-12 text-center text-white">
+        <h1 className="text-3xl font-bold mb-4">Корзина пуста</h1>
+        <p className="text-neutral-400 mb-8">Добавьте товары, чтобы оформить заказ.</p>
+        <Link href="/catalog" className="inline-block px-8 py-3 border border-white text-white uppercase text-sm tracking-widest hover:bg-white hover:text-black transition-colors">
+          Вернуться в каталог
+        </Link>
+      </main>
+    );
+  }
 
   return (
-    <main className="max-w-3xl mx-auto py-16 px-6">
-      <h1 className="text-3xl font-bold mb-10 text-center">Оформление заказа</h1>
+    <main className="max-w-7xl mx-auto px-6 py-12 text-white">
+      <Link href="/cart" className="inline-flex items-center text-neutral-400 hover:text-white mb-8 transition-colors">
+        <ChevronLeft size={20} className="mr-2" />
+        Вернуться в корзину
+      </Link>
 
-      {/* EMAIL */}
-      <div className="mb-8">
-        <label className="block mb-2 text-sm uppercase tracking-widest">Email</label>
-        <input
-          type="email"
-          className="w-full px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+      <h1 className="text-3xl sm:text-4xl font-bold uppercase tracking-wider mb-10 text-center lg:text-left">
+        Оформление заказа
+      </h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 lg:gap-16">
+        
+        <form id="checkout-form" onSubmit={logic.handlePlaceOrder} noValidate className="lg:col-span-2 space-y-12">
+          
+          <CheckoutForm 
+            email={logic.email}
+            handleEmailChange={logic.handleEmailChange}
+            address={logic.address}
+            handleAddressChange={logic.handleAddressChange}
+            errors={logic.errors}
+          />
+
+          <ShippingSelect 
+            options={logic.shippingOptions}
+            selected={logic.selectedShipping}
+            onChange={logic.setSelectedShipping}
+            loading={logic.loadingOptions}
+            currency={logic.currency}
+          />
+
+        </form>
+
+        <div className="lg:col-span-1">
+          <OrderSummary 
+            items={items}
+            itemsTotal={logic.itemsTotal}
+            shippingPrice={logic.shippingPrice}
+            grandTotal={logic.grandTotal}
+            currency={logic.currency}
+            isSubmitting={logic.isSubmitting}
+            disabled={logic.isSubmitting || logic.loadingOptions || !logic.selectedShipping}
+          />
+        </div>
+
       </div>
-
-      {/* SHIPPING ADDRESS */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <input
-          placeholder="Имя"
-          className="px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={address.first_name}
-          onChange={(e) => setAddress({ ...address, first_name: e.target.value })}
-        />
-        <input
-          placeholder="Фамилия"
-          className="px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={address.last_name}
-          onChange={(e) => setAddress({ ...address, last_name: e.target.value })}
-        />
-        <input
-          placeholder="Адрес"
-          className="col-span-2 px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={address.address_1}
-          onChange={(e) => setAddress({ ...address, address_1: e.target.value })}
-        />
-        <input
-          placeholder="Город"
-          className="px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={address.city}
-          onChange={(e) => setAddress({ ...address, city: e.target.value })}
-        />
-        <input
-          placeholder="Почтовый индекс"
-          className="px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={address.postal_code}
-          onChange={(e) => setAddress({ ...address, postal_code: e.target.value })}
-        />
-        <input
-          placeholder="Телефон"
-          className="px-4 py-3 bg-neutral-900 border border-neutral-700 rounded"
-          value={address.phone}
-          onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-        />
-      </div>
-
-      {/* SHIPPING OPTIONS */}
-      <div className="mb-10">
-        <h2 className="text-lg font-semibold mb-4 uppercase tracking-wider">Доставка</h2>
-
-        {shippingOptions.length === 0 && (
-          <p className="text-neutral-400">Нет доступных способов доставки</p>
-        )}
-
-        {shippingOptions.map((opt) => (
-          <label key={opt.id} className="flex items-center gap-3 py-3 cursor-pointer">
-            <input
-              type="radio"
-              name="shipping"
-              checked={selectedShipping === opt.id}
-              onChange={() => setSelectedShipping(opt.id)}
-            />
-            <div>
-              <p>{opt.name}</p>
-              <p className="text-sm text-neutral-400">
-                {opt.amount && opt.currency_code
-                  ? `${(opt.amount / 100).toFixed(2)} ${opt.currency_code.toUpperCase()}`
-                  : "Цена недоступна"}
-              </p>
-            </div>
-          </label>
-        ))}
-      </div>
-
-      <button
-        onClick={handleCompleteCheckout}
-        disabled={busy || !selectedShipping}
-        className="w-full bg-white text-black py-4 rounded font-bold disabled:opacity-30"
-      >
-        {busy ? "Оформляем…" : "Завершить заказ"}
-      </button>
     </main>
   );
 }

@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Loom",
-  description: "A mini shop built with Medusa and Next.js",
+  title: {
+    template: '%s | Loom Store',
+    default: 'Loom Store',
+  },
+  description: 'Лучший магазин одежды на MedusaJS и Next.js',
 };
 
 export default function RootLayout({ children }) {

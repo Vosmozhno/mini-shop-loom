@@ -82,7 +82,6 @@ export default function CartPage() {
                     </button>
                   </div>
 
-                  {/* Кнопка удаления */}
                   <button
                     onClick={() => removeItem(item.id)}
                     className="text-neutral-500 hover:text-white transition-colors"

@@ -6,10 +6,10 @@ import Link from "next/link"
 
 export default function CatalogPage() {
 
-
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [regionId, setRegionId] = useState(null)
 
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategories, setSelectedCategories] = useState([])
@@ -18,29 +18,45 @@ export default function CatalogPage() {
   const dropdownRef = useRef(null)
 
   useEffect(() => {
-    medusa.productCategories.list({ limit: 100 })
+    medusa.store.category.list({ limit: 100 })
       .then(({ product_categories }) => setCategories(product_categories))
       .catch((err) => console.error("Ошибка при получении категорий:", err))
+
+    medusa.store.region.list()
+      .then(({ regions }) => {
+        if (regions && regions.length > 0) {
+          setRegionId(regions[0].id)
+        } else {
+          console.error("Нет доступных регионов")
+          setLoading(false)
+        }
+      })
+      .catch((err) => console.error("Ошибка при получении регионов:", err))
   }, [])
 
   useEffect(() => {
+    if (!regionId) return;
+
     setLoading(true);
+    
     const params = {
-      fields: "*variants.calculated_price",
-      region_id: "reg_01K85W4J26QYCAR5VP64BXCM63",
-      sales_channel_id: ["sc_01KA94GJ8JGEXJWJ1S87WCSXWG"],
+      limit: 50,
+      fields: "+variants.calculated_price,+title,+thumbnail,+handle", 
+      region_id: regionId,
+      sales_channel_id: process.env.NEXT_PUBLIC_SALES_CHANNEL_ID,
     };
+
     if (searchQuery) params.q = searchQuery;
     if (selectedCategories.length > 0) params.category_id = selectedCategories;
 
     const timer = setTimeout(() => {
-      medusa.products.list(params)
+      medusa.store.product.list(params)
         .then(({ products }) => setProducts(products))
         .catch((err) => console.error("Ошибка при получении продуктов:", err))
         .finally(() => setLoading(false));
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedCategories]);
+  }, [searchQuery, selectedCategories, regionId]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -58,7 +74,6 @@ export default function CatalogPage() {
         ? prev.filter((id) => id !== categoryId)
         : [...prev, categoryId]
     );
-
   };
 
   return (
@@ -111,7 +126,10 @@ export default function CatalogPage() {
         </div>
 
         {loading ? (
-          <p className="text-center">Загрузка товаров...</p>
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mb-4"></div>
+            <p>Загрузка товаров...</p>
+          </div>
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
             {products.map((p) => {
@@ -143,9 +161,10 @@ export default function CatalogPage() {
             })}
           </div>
         ) : (
-          <p className="text-center text-gray-400">
-            Товары не найдены. Попробуйте изменить критерии поиска.
-          </p>
+          <div className="text-center text-gray-400 py-20">
+            <p className="text-xl mb-2">Товары не найдены</p>
+            <p>Попробуйте изменить параметры поиска или фильтры</p>
+          </div>
         )}
       </div>
     </main>
