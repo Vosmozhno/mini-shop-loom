@@ -25,8 +25,11 @@ export const CartProvider = ({ children }) => {
         }
 
         if (!cart) {
+          // --- ИЗМЕНЕНИЕ №1 ЗДЕСЬ ---
+          // Добавляем ID канала продаж при создании новой корзины
           const response = await medusa.carts.create({
-            region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
+            region_id: "reg_01K85W4J26QYCAR5VP64BXCM63",
+            sales_channel_id: process.env.NEXT_PUBLIC_SALES_CHANNEL_ID,
           });
           cart = response.cart;
           localStorage.setItem("cart_id", cart.id);
@@ -80,8 +83,11 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     try {
       localStorage.removeItem("cart_id");
+      // --- ИЗМЕНЕНИЕ №2 ЗДЕСЬ ---
+      // Добавляем ID канала продаж также при создании корзины после очистки
       const { cart: newCart } = await medusa.carts.create({
-        region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
+        region_id: "reg_01K85W4J26QYCAR5VP64BXCM63",
+        sales_channel_id: process.env.NEXT_PUBLIC_SALES_CHANNEL_ID,
       });
       setCart(newCart);
       localStorage.setItem("cart_id", newCart.id);

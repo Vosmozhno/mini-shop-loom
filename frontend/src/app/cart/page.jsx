@@ -38,7 +38,6 @@ export default function CartPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 lg:gap-16">
         
-        {/* ЛЕВАЯ ЧАСТЬ — ТОВАРЫ */}
         <div className="lg:col-span-2">
           <div className="space-y-8">
             {items.map((item) => (
@@ -46,7 +45,6 @@ export default function CartPage() {
                 key={item.id}
                 className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 pb-8 gap-6"
               >
-                {/* Фото + текст */}
                 <div className="flex flex-1 items-start sm:items-center gap-6">
                   <div className="w-40 h-40 flex-shrink-0 bg-neutral-900 rounded-md overflow-hidden">
                     <img
@@ -56,7 +54,6 @@ export default function CartPage() {
                     />
                   </div>
 
-                  {/* Расширенное место для текста */}
                   <div className="flex-1">
                     <h2 className="text-2xl uppercase tracking-widest font-semibold text-white leading-tight">
                       {item.title}
@@ -67,7 +64,6 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* Количество */}
                 <div className="flex items-center gap-4 sm:gap-6">
                   <div className="flex items-center border border-white/30 rounded-md">
                     <button
@@ -99,7 +95,6 @@ export default function CartPage() {
           </div>
         </div>
 
-        {/* ПРАВАЯ ЧАСТЬ — ИТОГ */}
         <div className="lg:col-span-1 mt-12 lg:mt-0">
           <div className="bg-neutral-800 rounded-lg p-8 sticky top-32">
             <h2 className="text-2xl uppercase tracking-wider font-semibold mb-6">Итоги заказа</h2>

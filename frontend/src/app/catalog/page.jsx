@@ -5,6 +5,8 @@ import { medusa } from "@/lib/medusa"
 import Link from "next/link"
 
 export default function CatalogPage() {
+
+
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
@@ -15,7 +17,6 @@ export default function CatalogPage() {
   const [isCategoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
-  // --- Логика получения данных остается без изменений ---
   useEffect(() => {
     medusa.productCategories.list({ limit: 100 })
       .then(({ product_categories }) => setCategories(product_categories))
@@ -26,7 +27,8 @@ export default function CatalogPage() {
     setLoading(true);
     const params = {
       fields: "*variants.calculated_price",
-      region_id: "reg_01K60RPE6D6HS0EQ71DVRBT35A",
+      region_id: "reg_01K85W4J26QYCAR5VP64BXCM63",
+      sales_channel_id: ["sc_01KA94GJ8JGEXJWJ1S87WCSXWG"],
     };
     if (searchQuery) params.q = searchQuery;
     if (selectedCategories.length > 0) params.category_id = selectedCategories;
@@ -56,6 +58,7 @@ export default function CatalogPage() {
         ? prev.filter((id) => id !== categoryId)
         : [...prev, categoryId]
     );
+
   };
 
   return (
