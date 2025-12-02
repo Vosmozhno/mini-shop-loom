@@ -18,6 +18,5 @@ module.exports = defineConfig({
   },
   admin: {
     disable: false,
-    path: "/dashboard",
   }
 })
