@@ -21,26 +21,14 @@ module.exports = defineConfig({
     path: "/",
     disable: !process.env.VERCEL,
   },
-  modules: [
+  plugins: [
     {
-      resolve: "@medusajs/file",
+      resolve: "medusa-file-cloudinary",
       options: {
-        providers: [
-          {
-            resolve: "@medusajs/file-s3",
-            id: "s3",
-            options: {
-              file_url: process.env.S3_FILE_URL,
-              endpoint: process.env.S3_ENDPOINT,
-              bucket: process.env.S3_BUCKET,
-              region: process.env.S3_REGION,
-              access_key_id: process.env.S3_ACCESS_KEY_ID,
-              secret_access_key: process.env.S3_SECRET_ACCESS_KEY,
-              force_path_style: true,
-              aws_config: {},
-            },
-          },
-        ],
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+        secure: true,
       },
     },
   ],
