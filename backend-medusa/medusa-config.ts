@@ -17,6 +17,6 @@ module.exports = defineConfig({
     workerMode: process.env.MEDUSA_WORKER_MODE as "shared" | "worker" | "server" || "shared",
   },
   admin: {
-    disable: false,
+    disable: true,
   }
 })
