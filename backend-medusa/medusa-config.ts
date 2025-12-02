@@ -17,6 +17,7 @@ module.exports = defineConfig({
     workerMode: process.env.MEDUSA_WORKER_MODE as "shared" | "worker" | "server" || "shared",
   },
   admin: {
+    path: "/",
     disable: !process.env.VERCEL,
   }
 })
