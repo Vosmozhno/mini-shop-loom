@@ -31,9 +31,11 @@ export default function AboutPage() {
     );
   }
 
-  const imageUrl = page.about_image?.url 
-    ? `${STRAPI_URL}${page.about_image.url}` 
-    : null;
+  const imageUrl = page.about_image?.url
+  ? page.about_image.url.startsWith('http')
+    ? page.about_image.url
+    : `${STRAPI_URL}${page.about_image.url}`
+  : null;
   const imageAlt = page.about_image?.alternativeText || "Изображение о компании";
 
   return (

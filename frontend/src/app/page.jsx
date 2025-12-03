@@ -33,9 +33,12 @@ export default function HomePage() {
     );
   }
 
-  const imageUrl = page.hero_image?.url 
-    ? `${STRAPI_URL}${page.hero_image.url}` 
-    : null;
+  const imageUrl = page.hero_image?.url
+  ? page.hero_image.url.startsWith('http')
+    ? page.hero_image.url
+    : `${STRAPI_URL}${page.hero_image.url}`
+  : null;
+
 
   return (
     <main className="bg-neutral-900 text-white">
