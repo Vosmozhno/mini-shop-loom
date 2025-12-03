@@ -22,22 +22,25 @@ module.exports = defineConfig({
   },
   modules: [
     {
-      resolve: "@medusajs/medusa/file", 
+      resolve: "@medusajs/medusa/file",
       options: {
         providers: [
           {
-            resolve: "@medusajs/file-s3", 
+            resolve: "@medusajs/file-s3",
             id: "s3",
             options: {
               file_url: process.env.B2_S3_URL,
               bucket: process.env.B2_BUCKET,
-              region: "us-east-1",
+              endpoint: process.env.B2_ENDPOINT,
+              region: process.env.B2_REGION,
               access_key_id: process.env.B2_KEY_ID,
               secret_access_key: process.env.B2_KEY_SECRET,
+              
+              s3ForcePathStyle: true,
             },
           },
         ],
       },
     },
-  ],
+]
 })
