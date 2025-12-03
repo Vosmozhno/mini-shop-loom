@@ -49,7 +49,7 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-black/60"></div>
         <div className="relative z-10 px-4 w-full max-w-4xl mx-auto pb-20 md:pb-0">
           
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold uppercase tracking-widest mb-4 md:mb-6 leading-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-semibold uppercase tracking-widest mb-4 md:mb-6 leading-tight">
             {page.title}
           </h1>
           

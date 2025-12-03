@@ -14,9 +14,6 @@
     "title": {
       "type": "string"
     },
-    "content": {
-      "type": "blocks"
-    },
     "slug": {
       "type": "uid",
       "targetField": "title"
@@ -27,6 +24,9 @@
       "allowedTypes": [
         "images"
       ]
+    },
+    "content": {
+      "type": "blocks"
     },
     "about_image": {
       "type": "media",

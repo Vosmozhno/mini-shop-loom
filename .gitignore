@@ -46,3 +46,5 @@ dist/
 .strapi-updater.json
 
 public/uploads/
+
+cms2
