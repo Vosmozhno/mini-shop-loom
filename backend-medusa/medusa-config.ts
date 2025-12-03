@@ -21,15 +21,18 @@ module.exports = defineConfig({
     path: "/",
     disable: !process.env.VERCEL,
   },
-  plugins: [
-    {
-      resolve: "medusa-file-cloudinary",
+  modules: {
+    file: {
+      resolve: "@medusajs/file-s3",
       options: {
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-        secure: true,
+        s3_url: process.env.B2_S3_URL,
+        bucket: process.env.B2_BUCKET,
+        region: "us-east-1",
+        credentials: {
+          access_key_id: process.env.B2_KEY_ID,
+          secret_access_key: process.env.B2_KEY_SECRET,
+        },
       },
     },
-  ],
+  },
 })
